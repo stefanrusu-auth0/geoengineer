@@ -30,6 +30,13 @@ class AwsClients
 
   # Clients
 
+  def self.acm(provider = nil)
+    self.client_cache(
+      provider,
+      Aws::ACM::Client
+    )
+  end
+
   def self.alb(provider = nil)
     self.client_cache(
       provider,

@@ -17,7 +17,11 @@ class GeoEngineer::Resources::AwsAcmCertificate < GeoEngineer::Resource
 
   def self._fetch_remote_resources(provider)
     _all_remote_certificates(provider).map do |certificate|
-      tags = AwsClients.acm.list_tags_for_certificate(certificate_arn: certificate[:certificate_arn]).tags.map(&:to_h)
+      tags = AwsClients.acm.list_tags_for_certificate(
+        {
+          certificate_arn: certificate[:certificate_arn]
+        }
+      ).tags.map(&:to_h)
 
       certificate.merge(
         {

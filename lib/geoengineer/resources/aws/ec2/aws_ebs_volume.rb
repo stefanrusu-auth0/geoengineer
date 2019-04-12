@@ -11,7 +11,7 @@ class GeoEngineer::Resources::AwsEbsVolume < GeoEngineer::Resource
   after :initialize, -> { _geo_id -> { NullObject.maybe(tags)[:Name] } }
 
   def self._fetch_remote_resources(provider)
-    AwsClients.ec2.describe_volumes.volumes.map do |volume|
+    AwsClients.ec2.describe_volumes.volumes.map(&:to_h).map do |volume|
       volume.merge(
         {
           _terraform_id: volume[:volume_id],

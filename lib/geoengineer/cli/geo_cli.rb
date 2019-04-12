@@ -200,9 +200,9 @@ class GeoCLI
       @verbose = false
     }
 
-    @no_state = false
+    @state = true
     global_option('--no-state', '-n', 'avoids the creation of state file (e.g for remote backends)') {
-      @no_state = true
+      @state = false
     }
 
     @no_color = ''

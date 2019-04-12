@@ -56,6 +56,7 @@ class GeoEngineer::Environment
     @outputs = []
     @providers = []
     @variables = []
+    @backends = []
     self.send("#{name}?=", true) # e.g. staging?
     instance_exec(self, &block) if block_given?
     execute_lifecycle(:after, :initialize)
@@ -98,6 +99,12 @@ class GeoEngineer::Environment
     variable = GeoEngineer::Variable.new(id, &block)
     @variables << variable
     variable
+  end
+
+  def backend(id, &block)
+    backend = GeoEngineer::Backend.new(id, &block)
+    @backends << backend
+    backend
   end
 
   def all_resources
@@ -152,6 +159,7 @@ class GeoEngineer::Environment
     tf_resources += @providers.compact.map(&:to_terraform)
     tf_resources += @outputs.compact.map(&:to_terraform)
     tf_resources += @variables.compact.map(&:to_terraform)
+    tf_resources += @backends.compact.map(&:to_terraform)
     tf_resources.join("\n\n")
   end
 
@@ -167,6 +175,7 @@ class GeoEngineer::Environment
     h[:output] = @outputs.map(&:to_terraform_json) unless @outputs.empty?
     h[:provider] = @providers.map(&:to_terraform_json) unless @providers.empty?
     h[:variable] = @variables.map(&:to_terraform_json) unless @variables.empty?
+    h[:terraform] = { backend: @backends.map(&:to_terraform_json) } unless @backends.empty?
     h
   end
 

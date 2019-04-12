@@ -51,6 +51,7 @@ class GeoEngineer::Project
 
   def backend(id, &block)
     @environment.backend(id, &block)
+  end
 
   def output(id, value)
     @environment.output(id, value)

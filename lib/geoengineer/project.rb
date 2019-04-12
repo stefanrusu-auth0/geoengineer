@@ -45,6 +45,10 @@ class GeoEngineer::Project
     [resources, all_template_resources].flatten
   end
 
+  def backend(id, &block)
+    @environment.backend(id, &block)
+  end
+
   # dot method
   def to_dot
     str = ["  subgraph \"cluster_#{full_id_name}\" {"]

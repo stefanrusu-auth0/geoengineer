@@ -58,6 +58,7 @@ module GeoCLI::TerraformCommands
   def terraform_plan_destroy
     plan_destroy_commands = [
       "cd #{@tmpdir}",
+      "terraform init #{@no_color}",
       "terraform refresh #{@no_color}",
       "terraform plan -destroy --refresh=false -parallelism=#{terraform_parallelism}" \
       " -state=#{@terraform_state_file} -out=#{@plan_file} #{@no_color}"

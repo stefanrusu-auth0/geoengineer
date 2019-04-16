@@ -6,7 +6,11 @@
 class GeoEngineer::Resources::AwsSecurityGroupRule < GeoEngineer::Resource
   validate -> { validate_required_attributes([:security_group_id, :type, :protocol, :from_port, :to_port]) }
 
-  after :initialize, -> { _terraform_id -> { "#{security_group_id}:#{type}:#{protocol}:#{from_port}:#{to_port}" } }
+  after :initialize, -> {
+    _terraform_id -> {
+      "#{security_group_id}:#{type}:#{protocol}:#{from_port}:#{to_port}:#{source_security_group_id}#{cidr_blocks}"
+    }
+  }
 
   def support_tags?
     false

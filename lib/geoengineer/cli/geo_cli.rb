@@ -46,7 +46,9 @@ class GeoCLI
       "#{@tmpdir}/#{@terraform_state_file}.backup",
       "#{@tmpdir}/#{@terraform_file}",
       "#{@tmpdir}/#{@terraform_state_file}",
-      "#{@tmpdir}/#{@plan_file}"
+      "#{@tmpdir}/#{@plan_file}",
+      # remote states store a reference here
+      "#{@tmpdir}/.terraform/#{@terraform_state_file}"
     ]
 
     files.each do |file|

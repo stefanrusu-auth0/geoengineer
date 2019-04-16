@@ -132,6 +132,7 @@ module GeoCLI::TerraformCommands
   def destroy_cmd
     command :destroy do |c|
       c.syntax = 'geo destroy [<geo_files>]'
+      c.option '--yes', 'Ignores the sanity check'
       c.description = 'Destroy an execution plan'
       action = lambda do |args, options|
         create_terraform_files(@state)
@@ -140,7 +141,7 @@ module GeoCLI::TerraformCommands
           puts "Plan Broken"
           exit exit_code
         end
-        unless yes?("Apply the above plan? [YES/NO]")
+        unless options.yes || yes?("Apply the above plan? [YES/NO]")
           puts "Rejecting Plan"
           exit 1
         end

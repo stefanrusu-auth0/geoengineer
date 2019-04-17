@@ -128,6 +128,7 @@ module GeoCLI::TerraformCommands
     end
   end
 
+  # rubocop:disable Metrics/AbcSize
   def destroy_cmd
     command :destroy do |c|
       c.syntax = 'geo destroy [<geo_files>]'
@@ -150,4 +151,5 @@ module GeoCLI::TerraformCommands
       c.action init_action(:destroy, &action)
     end
   end
+  # rubocop:enable Metrics/AbcSize
 end

@@ -11,7 +11,8 @@ class GeoEngineer::Resources::AwsInstance < GeoEngineer::Resource
   after :initialize, -> { _geo_id -> { NullObject.maybe(tags)[:Name] } }
 
   def self._all_remote_instances(provider)
-    AwsClients.ec2.describe_instances.reservations.map(&:instances).flatten.map(&:to_h)
+    instances = AwsClients.ec2.describe_instances.reservations.map(&:instances).flatten.map(&:to_h)
+    instances.reject { |i| i[:state][:name] == 'terminated' }
   end
 
   def self._fetch_remote_resources(provider)

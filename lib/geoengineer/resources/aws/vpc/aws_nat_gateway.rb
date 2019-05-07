@@ -11,7 +11,7 @@ class GeoEngineer::Resources::AwsNatGateway < GeoEngineer::Resource
   after :initialize, -> { _geo_id -> { NullObject.maybe(tags)[:Name] } }
 
   def self._fetch_remote_resources(provider)
-    AwsClients.ec2(provider).describe_nat_gateways['nat_gateways'].map(&:to_h).map do |gateway|
+    gateways = AwsClients.ec2(provider).describe_nat_gateways['nat_gateways'].map(&:to_h).map do |gateway|
       name_tag = gateway[:tags]&.detect { |t| t[:key] == 'Name' }
 
       gateway[:_terraform_id] = gateway[:nat_gateway_id]
@@ -19,5 +19,8 @@ class GeoEngineer::Resources::AwsNatGateway < GeoEngineer::Resource
 
       gateway
     end
+
+    # ignore deleted gateways
+    gateways.reject { |gateway| gateway[:state] == 'deleted' }
   end
 end

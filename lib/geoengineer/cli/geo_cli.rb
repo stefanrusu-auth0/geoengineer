@@ -90,8 +90,8 @@ class GeoCLI
     require "#{dir}/gps.rb" if File.exist? "#{dir}/gps.rb"
   end
 
-  def require_environment(options = nil)
-    @env_name = options&.environment || ENV['GEO_ENV'] || 'staging'
+  def require_environment
+    @env_name = @environment || ENV['GEO_ENV'] || 'staging'
     puts "Using environment '#{@env_name}'\n" if @verbose
     begin
       require_from_pwd "environments/#{@env_name}"
@@ -162,7 +162,7 @@ class GeoCLI
   # - execute the after hook
   def init_action(action_name)
     lambda do |args, options|
-      require_environment(options)
+      require_environment
       require_geo_files(args)
       throw "Environment not set" unless @environment
 
@@ -195,7 +195,10 @@ class GeoCLI
   end
 
   def global_options
-    global_option('-e', '--environment <name>', "Environment to use")
+    @environment = nil
+    global_option('-e', '--environment <name>', "Environment to use") { |env|
+      @environment = env
+    }
 
     @verbose = true
     global_option('--quiet', 'reduce the noisy outputs (default they are on)') {

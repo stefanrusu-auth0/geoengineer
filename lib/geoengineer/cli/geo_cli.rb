@@ -230,6 +230,7 @@ class GeoCLI
     status_cmd
     test_cmd
     query_cmd
+    files_cmd
   end
 
   def run

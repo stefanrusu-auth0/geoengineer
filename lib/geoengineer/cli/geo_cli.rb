@@ -91,7 +91,7 @@ class GeoCLI
   end
 
   def require_environment
-    @env_name = @environment || ENV['GEO_ENV'] || 'staging'
+    @env_name = @env_arg || ENV['GEO_ENV'] || 'staging'
     puts "Using environment '#{@env_name}'\n" if @verbose
     begin
       require_from_pwd "environments/#{@env_name}"
@@ -195,9 +195,9 @@ class GeoCLI
   end
 
   def global_options
-    @environment = nil
-    global_option('-e', '--environment <name>', "Environment to use") { |env|
-      @environment = env
+    @env_arg = nil
+    global_option('-e', '--environment <name>', "Environment to use") { |env_arg|
+      @env_arg = env_arg
     }
 
     @verbose = true

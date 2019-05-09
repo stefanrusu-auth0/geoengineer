@@ -103,7 +103,7 @@ module GeoCLI::TerraformCommands
       c.option '--allow-destroy', 'Run the plan with allow_destroy = true, useful for debugging'
       action = lambda do |args, options|
         env.allow_destroy(true) if options.allow_destroy
-        create_terraform_files
+        create_terraform_files(@state)
         terraform_plan
       end
       c.action init_action(:plan, &action)
@@ -116,7 +116,7 @@ module GeoCLI::TerraformCommands
       c.option '--yes', 'Ignores the sanity check'
       c.description = 'Apply an execution plan'
       action = lambda do |args, options|
-        create_terraform_files
+        create_terraform_files(@state)
         terraform_plan
         unless options.yes || yes?("Apply the above plan? [YES/NO]")
           puts "Rejecting Plan"
@@ -134,7 +134,7 @@ module GeoCLI::TerraformCommands
       c.syntax = 'geo destroy [<geo_files>]'
       c.description = 'Destroy an execution plan'
       action = lambda do |args, options|
-        create_terraform_files
+        create_terraform_files(@state)
         exit_code = terraform_plan_destroy.exitstatus
         if exit_code.nonzero?
           puts "Plan Broken"

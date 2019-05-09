@@ -202,6 +202,11 @@ class GeoCLI
       @verbose = false
     }
 
+    @state = true
+    global_option('--no-state', '-n', 'avoids the creation of state file (e.g for remote backends)') {
+      @state = false
+    }
+
     @no_color = ''
     global_option('--no-color', 'removes color from the terraform output') {
       String.disable_colorization = true

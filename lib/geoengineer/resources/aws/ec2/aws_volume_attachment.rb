@@ -18,8 +18,12 @@ class GeoEngineer::Resources::AwsVolumeAttachment < GeoEngineer::Resource
 
     AwsClients.ec2.describe_instances.reservations.map(&:instances).flatten.map(&:to_h).each do |instance|
       instance[:block_device_mappings].each do |device|
-        device[:instance_id] = instance[:instance_id]
-        device[:_terraform_id] = "vai-#{Crc32.hashcode("#{device[:device_name]}-#{instance[:instance_id]}-#{device[:ebs][:volume_id]}-")}"
+        device_name = device[:device_name]
+        instance_id = instance[:instance_id]
+        volume_id = device[:ebs][:volume_id]
+
+        device[:instance_id] = instance_id
+        device[:_terraform_id] = "vai-#{Crc32.hashcode("#{device_name}-#{instance_id}-#{volume_id}-")}"
         volumes << device
       end
     end

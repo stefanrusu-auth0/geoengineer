@@ -43,7 +43,6 @@ class GeoEngineer::Resource
     return @_remote if @_remote_searched
     @_remote = _find_remote_resource
     @_remote_searched = true
-    @_remote&.local_resource = self
     @_remote
   end
 
@@ -77,6 +76,8 @@ class GeoEngineer::Resource
       json[k] ||= []
       json[k] << v
     end
+
+    json["tags"] = json["tags"].reduce({}, :merge) if json["tags"] # tags not a list
     json
   end
 
@@ -196,7 +197,7 @@ class GeoEngineer::Resource
     return @_rr_cache[provider_id] if @_rr_cache[provider_id]
     @_rr_cache[provider_id] = _fetch_remote_resources(provider)
                               .reject { |resource| _ignore_remote_resource?(resource) }
-                              .map { |resource| GeoEngineer::Resource.build(resource) }
+                              .map { |resource| build(resource) }
   end
 
   # This method must be implemented for each resource type
@@ -225,7 +226,15 @@ class GeoEngineer::Resource
   end
 
   def self._ignore_remote_resource?(resource)
-    _resources_to_ignore.include?(_deep_symbolize_keys(resource)[:_geo_id])
+    geo_id = _deep_symbolize_keys(resource)[:_geo_id]
+    _resources_to_ignore.any? do |string_or_regex|
+      case string_or_regex
+      when Regexp
+        geo_id.match?(string_or_regex)
+      else
+        string_or_regex == geo_id
+      end
+    end
   end
 
   def self._deep_symbolize_keys(obj)

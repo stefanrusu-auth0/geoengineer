@@ -6,8 +6,13 @@
 class GeoEngineer::Resources::AwsKeyPair < GeoEngineer::Resource
   validate -> { validate_required_attributes([:key_name, :public_key]) }
 
-  after :initialize, lambda {
-    _terraform_id -> { "ssh_key_pair.#{id}" }
+  after :initialize, -> {
+    _terraform_id -> { key_name }
+    _geo_id       -> { key_name }
+
+    self.lifecycle {} unless self.lifecycle
+    self.lifecycle.ignore_changes ||= []
+    self.lifecycle.ignore_changes |= ["public_key", "fingerprint"]
   }
 
   def support_tags?

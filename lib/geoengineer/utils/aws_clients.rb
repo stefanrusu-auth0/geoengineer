@@ -31,14 +31,14 @@ class AwsClients
   end
 
   # Clients
-  
+
   def self.accelerator(provider = nil)
     self.client_cache(
       provider,
       Aws::GlobalAccelerator::Client
     )
   end
-    
+
   def self.acm(provider = nil)
     self.client_cache(
       provider,

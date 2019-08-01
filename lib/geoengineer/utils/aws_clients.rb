@@ -32,6 +32,13 @@ class AwsClients
 
   # Clients
 
+  def self.accelerator(provider = nil)
+    self.client_cache(
+      provider,
+      AWS::GlobalAccelerator::Client
+    )
+  end
+
   def self.alb(provider = nil)
     self.client_cache(
       provider,

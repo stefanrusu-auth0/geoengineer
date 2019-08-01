@@ -27,7 +27,7 @@ class GeoEngineer::Resources::AwsS3BucketPublicAccessBlock < GeoEngineer::Resour
   def self._fetch_remote_resources(provider)
     client = AwsClients.s3(provider)
     client.list_buckets.buckets.map(&:to_h).map do |s3b|
-      region = client.get_bucket_location(bucket: s3b[:name])
+      region = client.get_bucket_location({ bucket: s3b[:name] })
 
       attributes = {
         _terraform_id: s3b[:name]
@@ -36,7 +36,7 @@ class GeoEngineer::Resources::AwsS3BucketPublicAccessBlock < GeoEngineer::Resour
       if region == provider.region
         # getting the public access block works onky within the same region
         pab = client.get_public_access_block(
-          bucket: s3b[:name]
+          { bucket: s3b[:name] }
         ).public_access_block_configuration
 
         attributes.merge!(pab.to_h)

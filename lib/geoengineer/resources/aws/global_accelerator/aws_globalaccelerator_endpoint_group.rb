@@ -1,3 +1,8 @@
+########################################################################
+# AwsGlobalacceleratorEndpointGroup is the +aws_globalaccelerator_endpoint_group+ terrform resource,
+#
+# {https://www.terraform.io/docs/providers/aws/r/globalaccelerator_endpoint_group.html Terraform Docs}
+########################################################################
 class GeoEngineer::Resources::AwsGlobalacceleratorEndpointGroup < GeoEngineer::Resource
   validate -> { validate_required_attributes([:listener_arn, :endpoint_id, :weight, :name]) }
 

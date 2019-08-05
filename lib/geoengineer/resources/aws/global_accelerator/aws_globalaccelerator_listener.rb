@@ -1,4 +1,9 @@
-class GeoEngineer::Resources::AwsGlobalacceleratorListener< GeoEngineer::Resource
+########################################################################
+# AwsGlobalacceleratorListener is the +aws_globalaccelerator_listener+ terrform resource,
+#
+# {https://www.terraform.io/docs/providers/aws/r/globalaccelerator_listener.html Terraform Docs}
+########################################################################
+class GeoEngineer::Resources::AwsGlobalacceleratorListener < GeoEngineer::Resource
   validate -> { validate_required_attributes([:accelerator_arn, :name]) }
 
   after :initialize, -> { _terraform_id -> { NullObject.maybe(remote_resource)._terraform_id } }

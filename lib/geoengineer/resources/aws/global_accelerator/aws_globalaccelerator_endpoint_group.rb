@@ -1,5 +1,5 @@
 class GeoEngineer::Resources::AwsGlobalacceleratorEndpoint < GeoEngineer::Resource
-  validate -> { validate_required_attributes([:listener_arn, :endpoint_id, :weight]) }
+  validate -> { validate_required_attributes([:listener_arn, :endpoint_id, :weight, :name]) }
 
   after :initialize, -> { _terraform_id -> { NullObject.maybe(remote_resource)._terraform_id } }
   after :initialize, -> { _geo_id -> { name } }
@@ -7,6 +7,7 @@ class GeoEngineer::Resources::AwsGlobalacceleratorEndpoint < GeoEngineer::Resour
   def to_terraform_state
     tfstate = super
     tfstate[:primary][:attributes] = {
+      'name' => name,
       'listener_arn' => listener_arn,
       'endpoint_id' => endpoint_id,
       'weight' => (weight || '100')

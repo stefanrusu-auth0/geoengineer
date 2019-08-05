@@ -1,4 +1,4 @@
-class GeoEngineer::Resources::GlobalAccelerator < GeoEngineer::Resource
+class GeoEngineer::Resources::AWSGlobalacceleratorAccelerator < GeoEngineer::Resource
   validate -> { validate_required_attributes([:name, :ip_address_type, :enabled]) }
 
   after :initialize, -> { _terraform_id -> { NullObject.maybe(remote_resource)._terraform_id } }
@@ -8,7 +8,7 @@ class GeoEngineer::Resources::GlobalAccelerator < GeoEngineer::Resource
     tfstate = super
     tfstate[:primary][:attributes] = {
       'name' => name,
-      'ip_address_type' => (ip_address_type || "IPV4"),
+      'ip_address_type' => (ip_address_type || 'IPV4'),
       'enabled' => (enabled || 'true')
     }
 

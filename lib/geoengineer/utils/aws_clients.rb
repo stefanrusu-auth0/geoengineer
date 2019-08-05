@@ -35,7 +35,7 @@ class AwsClients
   def self.accelerator(provider = nil)
     self.client_cache(
       provider,
-      AWS::GlobalAccelerator::Client
+      Aws::GlobalAccelerator::Client
     )
   end
 

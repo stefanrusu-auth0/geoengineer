@@ -36,8 +36,6 @@ class AwsClients
     self.client_cache(
       provider,
       Aws::GlobalAccelerator::Client
-<<<<<<< HEAD
-=======
     )
   end
 
@@ -45,7 +43,6 @@ class AwsClients
     self.client_cache(
       provider,
       Aws::ACM::Client
->>>>>>> 934618ee75ff702bada495562f681673894d8810
     )
   end
 

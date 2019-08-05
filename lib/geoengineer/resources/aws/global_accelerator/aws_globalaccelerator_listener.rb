@@ -1,5 +1,5 @@
-class GeoEngineer::Resources::AwsGlobalacceleratorEndpointGroup < GeoEngineer::Resource
-  validate -> { validate_required_attributes([:listener_arn, :endpoint_id, :weight, :name]) }
+class GeoEngineer::Resources::AwsGlobalacceleratorListener< GeoEngineer::Resource
+  validate -> { validate_required_attributes([:accelerator_arn, :name]) }
 
   after :initialize, -> { _terraform_id -> { NullObject.maybe(remote_resource)._terraform_id } }
   after :initialize, -> { _geo_id -> { name } }
@@ -8,9 +8,7 @@ class GeoEngineer::Resources::AwsGlobalacceleratorEndpointGroup < GeoEngineer::R
     tfstate = super
     tfstate[:primary][:attributes] = {
       'name' => name,
-      'listener_arn' => listener_arn,
-      'endpoint_id' => endpoint_id,
-      'weight' => (weight || '100')
+      'accelerator_arn' => accelerator_arn
     }
 
     tfstate[:primary][:attributes]['filename'] = filename if filename
@@ -19,7 +17,7 @@ class GeoEngineer::Resources::AwsGlobalacceleratorEndpointGroup < GeoEngineer::R
   end
 
   def short_type
-    'endpoint'
+    'listener'
   end
 
   def support_tags?
@@ -28,10 +26,10 @@ class GeoEngineer::Resources::AwsGlobalacceleratorEndpointGroup < GeoEngineer::R
 
   def self._fetch_remote_resources(provider)
     client = AwsClients.accelerator(provider)
-    client.list_endpoint_groups.endpoint_descriptions.map(&:to_h).map do |endpoint|
-      endpoint[:_terraform_id] = endpoint[:listener_arn]
-      endpoint[:_geo_id] = endpoint[:_geo_id]
-      endpoint
+    client.list_listeners.listeners.map(&:to_h).map do |listener|
+      listener[:_terraform_id] = listener[:listener_arn]
+      listener[:_geo_id] = listener[:_geo_id]
+      listener
     end
   end
 end

@@ -1,4 +1,13 @@
+<<<<<<< HEAD:lib/geoengineer/resources/aws/global_accelerator/global_accelerator.rb
 class GeoEngineer::Resources::AWSGlobalacceleratorAccelerator < GeoEngineer::Resource
+=======
+########################################################################
+# AwsGlobalacceleratorAccelerator +aws_globalaccelerator_accelerator+ terrform resource,
+#
+# {https://www.terraform.io/docs/providers/aws/r/globalaccelerator_accelerator.html Terraform Docs}
+########################################################################
+class GeoEngineer::Resources::AwsGlobalacceleratorAccelerator < GeoEngineer::Resource
+>>>>>>> 934618ee75ff702bada495562f681673894d8810:lib/geoengineer/resources/aws/global_accelerator/aws_globalaccelerator_accelerator.rb
   validate -> { validate_required_attributes([:name, :ip_address_type, :enabled]) }
 
   after :initialize, -> { _terraform_id -> { NullObject.maybe(remote_resource)._terraform_id } }
@@ -18,7 +27,7 @@ class GeoEngineer::Resources::AWSGlobalacceleratorAccelerator < GeoEngineer::Res
   end
 
   def short_type
-    "ga"
+    'ga'
   end
 
   def support_tags?
@@ -27,10 +36,9 @@ class GeoEngineer::Resources::AWSGlobalacceleratorAccelerator < GeoEngineer::Res
 
   def self._fetch_remote_resources(provider)
     client = AwsClients.accelerator(provider)
-    client.describe_accelerator['accelerator'].map(&:to_h).map do |ga|
+    client.list_accelerators.accelerators.map(&:to_h).map do |ga|
       ga[:_terraform_id] = ga[:name]
-      ga[:_geo_id] = "#{ga[:accelerator_arn]}::#{ga[:type]}"
-      ga[:_arn] = ga[:accelerator_arn]
+      ga[:_geo_id] = ga[:_geo_id]
       ga
     end
   end

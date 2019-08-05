@@ -57,7 +57,7 @@ class GeoEngineer::Resources::AwsRoute53Record < GeoEngineer::Resource
     response.each do |page|
       records += page.resource_record_sets.map(&:to_h).map do |record|
         name = _fetch_name(record, zone)
-        id = "#{zone_id}_#{name}_#{record[:type]}"
+        id = "#{zone_id}_#{name}_#{record[:type]}_#{record[:failover]}"
         record.merge({ fqdn: name, _terraform_id: id, _geo_id: id })
       end
     end

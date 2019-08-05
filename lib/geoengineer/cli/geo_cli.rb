@@ -46,7 +46,9 @@ class GeoCLI
       "#{@tmpdir}/#{@terraform_state_file}.backup",
       "#{@tmpdir}/#{@terraform_file}",
       "#{@tmpdir}/#{@terraform_state_file}",
-      "#{@tmpdir}/#{@plan_file}"
+      "#{@tmpdir}/#{@plan_file}",
+      # remote states store a reference here
+      "#{@tmpdir}/.terraform/#{@terraform_state_file}"
     ]
 
     files.each do |file|
@@ -88,8 +90,8 @@ class GeoCLI
     require "#{dir}/gps.rb" if File.exist? "#{dir}/gps.rb"
   end
 
-  def require_environment(options = nil)
-    @env_name = options&.environment || ENV['GEO_ENV'] || 'staging'
+  def require_environment
+    @env_name = @env_arg || ENV['GEO_ENV'] || 'staging'
     puts "Using environment '#{@env_name}'\n" if @verbose
     begin
       require_from_pwd "environments/#{@env_name}"
@@ -160,7 +162,7 @@ class GeoCLI
   # - execute the after hook
   def init_action(action_name)
     lambda do |args, options|
-      require_environment(options)
+      require_environment
       require_geo_files(args)
       throw "Environment not set" unless @environment
 
@@ -193,11 +195,19 @@ class GeoCLI
   end
 
   def global_options
-    global_option('-e', '--environment <name>', "Environment to use")
+    @env_arg = nil
+    global_option('-e', '--environment <name>', "Environment to use") { |env_arg|
+      @env_arg = env_arg
+    }
 
     @verbose = true
     global_option('--quiet', 'reduce the noisy outputs (default they are on)') {
       @verbose = false
+    }
+
+    @state = true
+    global_option('--no-state', '-n', 'avoids the creation of state file (e.g for remote backends)') {
+      @state = false
     }
 
     @no_color = ''
@@ -220,6 +230,7 @@ class GeoCLI
     status_cmd
     test_cmd
     query_cmd
+    files_cmd
   end
 
   def run

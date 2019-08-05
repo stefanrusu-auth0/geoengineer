@@ -45,6 +45,9 @@ Metrics/AbcSize:
     - 'lib/geoengineer/resources/aws/ses/aws_ses_event_destination.rb'
     - 'lib/geoengineer/resources/aws/api_gateway/helpers.rb'
 
+Metrics/CyclomaticComplexity:
+  Max: 20
+
 Style/Lambda:
   Enabled: false
 

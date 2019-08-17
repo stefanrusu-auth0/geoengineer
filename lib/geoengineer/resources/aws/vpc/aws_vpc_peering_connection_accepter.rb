@@ -1,5 +1,5 @@
 ########################################################################
-# AwsVpcPeeringConnection is the +aws_vpc_peering_connection_Accepter+ terrform resource,
+# AwsVpcPeeringConnection is the +aws_vpc_peering_connection_accepter+ terrform resource,
 #
 # {https://www.terraform.io/docs/providers/aws/r/vpc_peering_accepter.html Terraform Docs}
 ########################################################################
@@ -20,11 +20,12 @@ class GeoEngineer::Resources::AwsVpcPeeringConnectionAccepter < GeoEngineer::Res
   end
 
   def self._fetch_remote_resources(provider)
-    AwsClients
-      .ec2(provider)
-      .describe_vpc_peering_connections['vpc_peering_connections']
-      .map(&:to_h)
-      .map { |connection| _merge_ids(connection) }
+    peerings = AwsClients
+               .ec2(provider)
+               .describe_vpc_peering_connections['vpc_peering_connections']
+               .map(&:to_h)
+               .map { |connection| _merge_ids(connection) }
+    peerings.reject { |p| p[:status][:code] == 'deleted' }
   end
 
   def self._merge_ids(connection)

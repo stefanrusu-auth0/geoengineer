@@ -11,11 +11,12 @@ class GeoEngineer::Resources::AwsVpcPeeringConnection < GeoEngineer::Resource
   after :initialize, -> { _geo_id -> { NullObject.maybe(tags)[:Name] } }
 
   def self._fetch_remote_resources(provider)
-    AwsClients
-      .ec2(provider)
-      .describe_vpc_peering_connections['vpc_peering_connections']
-      .map(&:to_h)
-      .map { |connection| _merge_ids(connection) }
+    peerings = AwsClients
+               .ec2(provider)
+               .describe_vpc_peering_connections['vpc_peering_connections']
+               .map(&:to_h)
+               .map { |connection| _merge_ids(connection) }
+    peerings.reject { |p| p[:status][:code] == 'deleted' }
   end
 
   def self._merge_ids(connection)

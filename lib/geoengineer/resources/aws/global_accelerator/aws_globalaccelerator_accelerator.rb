@@ -31,10 +31,9 @@ class GeoEngineer::Resources::AwsGlobalacceleratorAccelerator < GeoEngineer::Res
   end
 
   def self._fetch_remote_resources(provider)
-    client = AwsClients.accelerator(provider)
+    client = AwsClients.global_accelerator(provider)
     client.list_accelerators.accelerators.map(&:to_h).map do |ga|
       ga[:_terraform_id] = ga[:name]
-      ga[:_geo_id] = ga[:_geo_id]
       ga
     end
   end

@@ -11,19 +11,20 @@ class AwsClients
     @stub_aws || false
   end
 
-  def self.client_params(provider = nil)
+  def self.client_params(provider = nil, params = nil)
     client_params = { stub_responses: stubbed? }
     client_params[:region] = provider.region if provider
+    client_params[:region] = params[:region] if params
     client_params[:retry_limit] = Integer(ENV['AWS_RETRY_LIMIT']) if ENV['AWS_RETRY_LIMIT']
     client_params
   end
 
-  def self.client_cache(provider, client)
+  def self.client_cache(provider, client, params)
     provider = nil if stubbed? # we ignore all providers if we are stubbing
 
     @client_cache ||= {}
     key = "#{client.name}_" + (provider&.terraform_id || GeoEngineer::Resource::DEFAULT_PROVIDER)
-    @client_cache[key] ||= client.new(client_params(provider))
+    @client_cache[key] ||= client.new(client_params(provider, params))
   end
 
   def self.clear_cache!
@@ -131,12 +132,13 @@ class AwsClients
   end
 
   def self.global_accelerator(provider = nil)
-    # Global Accelerator won't work without this region endpoint anyway
-    provider.region = 'us-west-2' if provider
-
     self.client_cache(
       provider,
-      Aws::GlobalAccelerator::Client
+      Aws::GlobalAccelerator::Client,
+      {
+        # Global Accelerator won't work without this region endpoint anyway
+        region: 'us-west-2'
+      }
     )
   end
 

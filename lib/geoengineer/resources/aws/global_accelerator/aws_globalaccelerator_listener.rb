@@ -23,7 +23,7 @@ class GeoEngineer::Resources::AwsGlobalacceleratorListener < GeoEngineer::Resour
     listeners = []
 
     client.list_accelerators.accelerators.each do |acc|
-      client.list_listeners(accelerator_arn: acc.accelerator_arn).listeners.each do |list|
+      client.list_listeners({ accelerator_arn: acc.accelerator_arn }).listeners.each do |list|
         list = list.to_h
         list[:_terraform_id] = list[:listener_arn]
 

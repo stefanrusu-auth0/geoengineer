@@ -19,7 +19,7 @@ class AwsClients
     client_params
   end
 
-  def self.client_cache(provider, client, params)
+  def self.client_cache(provider, client, params = nil)
     provider = nil if stubbed? # we ignore all providers if we are stubbing
 
     @client_cache ||= {}

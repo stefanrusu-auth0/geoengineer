@@ -32,13 +32,6 @@ class AwsClients
 
   # Clients
 
-  def self.accelerator(provider = nil)
-    self.client_cache(
-      provider,
-      Aws::GlobalAccelerator::Client
-    )
-  end
-
   def self.acm(provider = nil)
     self.client_cache(
       provider,
@@ -134,6 +127,16 @@ class AwsClients
     self.client_cache(
       provider,
       Aws::ElasticLoadBalancing::Client
+    )
+  end
+
+  def self.global_accelerator(provider = nil)
+    # Global Accelerator won't work without this region endpoint anyway
+    provider.region = 'us-west-2' if provider
+
+    self.client_cache(
+      provider,
+      Aws::GlobalAccelerator::Client
     )
   end
 

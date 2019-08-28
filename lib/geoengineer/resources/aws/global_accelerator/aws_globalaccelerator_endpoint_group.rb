@@ -32,7 +32,7 @@ class GeoEngineer::Resources::AwsGlobalacceleratorEndpointGroup < GeoEngineer::R
   end
 
   def self._fetch_remote_resources(provider)
-    client = AwsClients.accelerator(provider)
+    client = AwsClients.global_accelerator(provider)
     client.list_endpoint_groups.endpoint_descriptions.map(&:to_h).map do |endpoint|
       endpoint[:_terraform_id] = endpoint[:listener_arn]
       endpoint[:_geo_id] = endpoint[:_geo_id]

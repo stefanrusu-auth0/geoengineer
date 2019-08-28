@@ -4,22 +4,10 @@
 # {https://www.terraform.io/docs/providers/aws/r/globalaccelerator_listener.html Terraform Docs}
 ########################################################################
 class GeoEngineer::Resources::AwsGlobalacceleratorListener < GeoEngineer::Resource
-  validate -> { validate_required_attributes([:accelerator_arn, :name]) }
+  validate -> { validate_required_attributes([:accelerator_arn, :port_range, :protocol]) }
 
   after :initialize, -> { _terraform_id -> { NullObject.maybe(remote_resource)._terraform_id } }
-  after :initialize, -> { _geo_id -> { name } }
-
-  def to_terraform_state
-    tfstate = super
-    tfstate[:primary][:attributes] = {
-      'name' => name,
-      'accelerator_arn' => accelerator_arn
-    }
-
-    tfstate[:primary][:attributes]['filename'] = filename if filename
-
-    tfstate
-  end
+  after :initialize, -> { _geo_id -> { "#{accelerator_arn}:#{protocol}:#{port_range}" } }
 
   def short_type
     'listener'
@@ -30,11 +18,19 @@ class GeoEngineer::Resources::AwsGlobalacceleratorListener < GeoEngineer::Resour
   end
 
   def self._fetch_remote_resources(provider)
-    client = AwsClients.accelerator(provider)
-    client.list_listeners.listeners.map(&:to_h).map do |listener|
-      listener[:_terraform_id] = listener[:listener_arn]
-      listener[:_geo_id] = listener[:_geo_id]
-      listener
+    client = AwsClients.global_accelerator(provider)
+
+    listeners = []
+
+    client.list_accelerators.accelerators.each do |acc|
+      client.list_listeners(accelerator_arn: acc.accelerator_arn).listeners.each do |list|
+        list = list.to_h
+        list[:_terraform_id] = list[:listener_arn]
+
+        listeners << list
+      end
     end
+
+    listeners
   end
 end

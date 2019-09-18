@@ -7,7 +7,7 @@ class GeoEngineer::Resources::AwsKmsKey < GeoEngineer::Resource
   validate -> { validate_required_attributes([:description]) }
 
   after :initialize, -> { _terraform_id -> { NullObject.maybe(remote_resource)._terraform_id } }
-  after :initialize, -> { _geo_id -> { description } }
+  after :initialize, -> { _geo_id -> { NullObject.maybe(tags)[:Name] } }
   after :initialize, -> { _arn -> { NullObject.maybe(remote_resource)._arn } }
 
   def _policy_file(path, binding_obj = nil)

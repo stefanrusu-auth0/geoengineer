@@ -24,6 +24,7 @@ class GeoEngineer::Resources::AwsDbInstance < GeoEngineer::Resource
 
   after :initialize, -> { final_snapshot_identifier -> { "#{identifier}-final" } }
   after :initialize, -> { _terraform_id -> { identifier } }
+  after :initialize, -> { _geo_id -> { NullObject.maybe(tags)[:Name] } }
 
   def to_terraform_state
     tfstate = super

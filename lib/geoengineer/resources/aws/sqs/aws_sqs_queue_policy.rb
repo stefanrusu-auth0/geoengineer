@@ -6,11 +6,7 @@
 class GeoEngineer::Resources::AwsSqsQueuePolicy < GeoEngineer::Resource
   validate -> { validate_required_attributes([:queue_url, :policy]) }
 
-  after :initialize, -> {
-    _terraform_id -> {
-      queue_url
-    }
-  }
+  after :initialize, -> { _terraform_id -> { queue_url } }
 
   def to_terraform_state
     tfstate = super
@@ -28,7 +24,7 @@ class GeoEngineer::Resources::AwsSqsQueuePolicy < GeoEngineer::Resource
   def self._fetch_remote_resources(provider)
     queue_policies = []
 
-    AwsClients.sqs(provider).list_queues['queue_urls'].map do |queue_url|
+    AwsClients.sqs(provider).list_queues.queue_urls.each do |queue_url|
       queue = AwsClients.sqs(provider).get_queue_attributes(
         {
           queue_url: queue_url,

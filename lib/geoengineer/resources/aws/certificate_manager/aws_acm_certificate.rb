@@ -12,11 +12,11 @@ class GeoEngineer::Resources::AwsAcmCertificate < GeoEngineer::Resource
   after :initialize, -> { _terraform_id -> { NullObject.maybe(remote_resource)._terraform_id } }
   after :initialize, -> { _geo_id -> { NullObject.maybe(tags)[:Name] } }
 
-  validate -> { validate_required_attributes([:domain_name]) }
+  # validate -> { validate_required_attributes([:domain_name]) }
   ## Note: The certificate_authority_arn is a required attribute which implies
   ## we are only requesting private ca issued certificates at this time
-  validate -> { validate_required_attributes([:certificate_authority_arn]) }
-  validate -> { validate_required_attributes([:options]) }
+  # validate -> { validate_required_attributes([:certificate_authority_arn]) }
+  # validate -> { validate_required_attributes([:options]) }
   validate -> { validate_has_tag(:Name) }
 
   def self._fetch_remote_resources(provider)

@@ -4,12 +4,13 @@
 # {https://www.terraform.io/docs/providers/aws/r/iam_role_policy_attachment.html Terraform Docs}
 ########################################################################
 class GeoEngineer::Resources::AwsIamRolePolicyAttachment < GeoEngineer::Resource
-  validate -> { validate_required_attributes([:_policy, :role]) }
+  validate -> { validate_required_attributes([:role]) }
+  validate -> { validate_at_least_one_present([:_policy, :policy_arn]) }
 
   before :validation, -> { policy_arn _policy.to_ref(:arn) if _policy }
 
   after :initialize, -> { _terraform_id -> { NullObject.maybe(remote_resource)._terraform_id } }
-  after :initialize, -> { _geo_id -> { "#{role}:#{_policy&.name}" } }
+  after :initialize, -> { _geo_id -> { "#{role}:#{_policy&.name || policy_arn}" } }
 
   def support_tags?
     false
@@ -23,7 +24,7 @@ class GeoEngineer::Resources::AwsIamRolePolicyAttachment < GeoEngineer::Resource
     tfstate = super
 
     attributes = {}
-    attributes['policy_arn'] = remote_resource.policy_arn if remote_resource
+    attributes['policy_arn'] = determine_policy_arn
     attributes['role'] = role
 
     tfstate[:primary][:attributes] = attributes
@@ -46,16 +47,29 @@ class GeoEngineer::Resources::AwsIamRolePolicyAttachment < GeoEngineer::Resource
 
     @@role_cache[policy_arn] = roles
     roles
+  rescue Aws::IAM::Errors::NoSuchEntity
+    nil
   end
 
   def remote_resource_params
-    return {} unless _policy
-    return {} unless _policy.remote_resource
+    arn = determine_policy_arn
+    return {} unless arn
 
-    arn = _policy.remote_resource._terraform_id
     attached_roles = fetch_entities(arn)
-
+    return {} unless attached_roles
     build_remote_resource_params(arn, attached_roles)
+  end
+
+  def determine_policy_arn
+    if policy_arn && !_policy
+      # check if the policy ARN is likely a Terraform reference, if so we can't fetch it so return nil
+      return /^\${[a-zA-Z0-9\._-]+}$/.match?(policy_arn) ? nil : policy_arn
+    end
+
+    return nil unless _policy
+    return nil unless _policy.remote_resource
+
+    _policy.remote_resource._terraform_id
   end
 
   def build_remote_resource_params(arn, entities)
@@ -64,7 +78,7 @@ class GeoEngineer::Resources::AwsIamRolePolicyAttachment < GeoEngineer::Resource
 
     {
       _terraform_id: "#{role}/#{arn}",
-      _geo_id: "#{role}:#{_policy.name}",
+      _geo_id: "#{role}:#{_policy&.name || policy_arn}",
       policy_arn: arn
     }
   end

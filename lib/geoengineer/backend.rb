@@ -1,17 +1,12 @@
 ########################################################################
-# Backends are mapped 1:1 to terraform backends
+# Outputs are mapped 1:1 to terraform outputs
 #
-# {https://www.terraform.io/docs/backends/index.html Terraform Docs}
+# {https://www.terraform.io/docs/backends Terraform Docs}
 ########################################################################
-
-# This implementation does not support recursion i.e providers with nested
-# attributes. Most probably it also doesn't support multiple backends per
-# project (an area not well documented by Terraform). For most providers,
-# this is sufficient.
 class GeoEngineer::Backend
-  include HasAttributes
-
   attr_reader :id
+  include HasAttributes
+  include HasSubResources
 
   def initialize(id, &block)
     @id = id
@@ -26,19 +21,23 @@ class GeoEngineer::Backend
     end
   end
 
-  def to_terraform_json
-    { id.to_s => terraform_attributes }
+  ## Terraform methods
+  def to_terraform
+    sb = ["backend #{@id.inspect} { "]
+
+    sb.concat(terraform_attributes.map { |k, v| "  #{k.to_s.inspect} = #{v.inspect}" })
+
+    sb.concat subresources.map(&:to_terraform)
+    sb << " }"
+    sb.join("\n")
   end
 
-  def to_terraform
-    sb = ['terraform {']
-    sb << [%(  backend "#{@id.inspect}" {)]
-    sb.concat terraform_attributes.map do |k, v|
-      "    #{k.to_s.inspect} = #{v.inspect}"
+  def to_terraform_json
+    json = terraform_attributes
+    subresources.map(&:to_terraform_json).each do |k, v|
+      json[k] ||= []
+      json[k] << v
     end
-    sb << ['  }']
-    sb << ['}']
-
-    sb.join "\n"
+    { id.to_s => json }
   end
 end

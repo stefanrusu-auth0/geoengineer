@@ -27,7 +27,7 @@ class GeoCLI
   attr_accessor :environment, :env_name
 
   # CLI FLAGS AND OPTIONS
-  attr_accessor :verbose, :no_color
+  attr_accessor :verbose, :verbose_state_output, :no_color
 
   def init_tmp_dir(name)
     @tmpdir = "#{Dir.pwd}/tmp/#{name}"
@@ -56,14 +56,14 @@ class GeoCLI
     end
   end
 
-  def create_environment(name, &block)
+  def create_environment(name, remote_state = false, &block)
     return @environment if @environment
     if name != @env_name
       puts "Not loading environment #{name} as env_name is #{@env_name}" if @verbose
       return NullObject.new
     end
 
-    @environment = GeoEngineer::Environment.new(name, &block)
+    @environment = GeoEngineer::Environment.new(name, remote_state, &block)
     init_tmp_dir(name)
     init_terraform_files()
     @environment
@@ -90,8 +90,8 @@ class GeoCLI
     require "#{dir}/gps.rb" if File.exist? "#{dir}/gps.rb"
   end
 
-  def require_environment
-    @env_name = @env_arg || ENV['GEO_ENV'] || 'staging'
+  def require_environment(options = nil)
+    @env_name = options&.environment || ENV['GEO_ENV'] || 'development'
     puts "Using environment '#{@env_name}'\n" if @verbose
     begin
       require_from_pwd "environments/#{@env_name}"
@@ -114,6 +114,12 @@ class GeoCLI
 
   # this method accepts .rb files and .gps.yml files
   def require_geo_files(files)
+    # if remote state files are supported, all project files must be used
+    # otherwise terraform will assume resources should be deleted.
+    if env.remote_state_supported? && !files.empty?
+      throw "This environment is configured to use remote Terraform state files, which requires loading all project files.
+             Re-run the geo command with no arguments."
+    end
     # load everything if empty
     return require_all_projects if files.empty?
 
@@ -139,12 +145,14 @@ class GeoCLI
     puts "Total Errors #{errs.length}"
   end
 
-  def shell_exec(cmd, verbose = @verbose)
+  def shell_exec(cmd, verbose = @verbose, verbose_state_output = @verbose_state_output)
     stdin, stdout_and_stderr, wait_thr = Open3.popen2e({}, *cmd)
 
     puts(">> #{cmd}\n") if verbose
     stdout_and_stderr.each do |line|
-      puts(line) if verbose
+      next unless verbose
+      next if line =~ /Refreshing state.../ && !verbose_state_output
+      puts(line)
     end
     puts("<< Exited with status: #{wait_thr.value.exitstatus}\n\n") if verbose
 
@@ -195,19 +203,16 @@ class GeoCLI
   end
 
   def global_options
-    @env_arg = nil
-    global_option('-e', '--environment <name>', "Environment to use") { |env_arg|
-      @env_arg = env_arg
-    }
+    global_option('-e', '--environment <name>', "Environment to use")
 
     @verbose = true
     global_option('--quiet', 'reduce the noisy outputs (default they are on)') {
       @verbose = false
     }
 
-    @state = true
-    global_option('--no-state', '-n', 'avoids the creation of state file (e.g for remote backends)') {
-      @state = false
+    @verbose_state_output = false
+    global_option('--show-refresh-state', 'show the refreshing state output (default they are off)') {
+      @verbose_state_output = true
     }
 
     @no_color = ''
@@ -230,6 +235,8 @@ class GeoCLI
     status_cmd
     test_cmd
     query_cmd
+    export_graph_command
+    diff_graph_command
     files_cmd
   end
 
@@ -238,9 +245,6 @@ class GeoCLI
     program :version, GeoEngineer::VERSION
     program :description, 'GeoEngineer will help you Terraform your resources'
     always_trace!
-
-    # check terraform installed
-    return puts "Please install terraform" unless terraform_installed?
 
     # global_options
     global_options

@@ -7,7 +7,7 @@ require 'yaml'
 # GPS is not a complete solution
 ###
 class GeoEngineer::GPS
-  class GPSProjetNotFound < StandardError; end
+  class GPSProjectNotFound < StandardError; end
   class NodeTypeNotFound < StandardError; end
   class MetaNodeError < StandardError; end
   class LoadError < StandardError; end
@@ -69,8 +69,7 @@ class GeoEngineer::GPS
       begin
         # Merge Keys don't work with YAML.safe_load
         # since we are also loading Ruby safe_load is not needed
-        gps_text = ERB.new(File.read(gps_file)).result(binding).to_s
-        gps_hash = YAML.load(gps_text)
+        gps_hash = YAML.load(File.read(gps_file))
         # remove all keys starting with `_` to remove paritals
         gps_hash = HashUtils.remove_(gps_hash)
         JSON::Validator.validate!(schema, gps_hash) if schema
@@ -157,6 +156,20 @@ class GeoEngineer::GPS
 
   def loop_projects_hash(projects_hash, &block)
     projects_hash.each_pair do |project, environments|
+      # If the environments includes _default, pull out its value, and loop over
+      # all other known environments and add it back in, if it doesn't already
+      # exist. This allows _default to be used as a template for cookie cutter
+      # definitions.
+      if environments.key?("_default")
+        defenv = environments.delete("_default")
+
+        # NOTE: the constants appeared to be the best place to easily get all known environments.
+        all_environments = @constants.constants.keys.reject { |env| env.start_with?('_') }
+        all_environments.each do |env|
+          environments[env] = HashUtils.deep_dup(defenv) unless environments[env]
+        end
+      end
+
       environments.each_pair do |environment, configurations|
         configurations.each_pair do |configuration, nodes|
           loop_nodes(project, environment, configuration, nodes, &block)
@@ -185,6 +198,7 @@ class GeoEngineer::GPS
     bn = node.build_nodes
     loop_nodes(node.project, node.environment, node.configuration, bn) do |new_node|
       new_node.set_values(all_nodes, @constants)
+      new_node.add_depends_on(node.depends_on) # pass dependencies along
       new_node.validate
       expanded_nodes << new_node
     end
@@ -235,7 +249,7 @@ class GeoEngineer::GPS
     environment_name = environment.name
     project_environments = project_environments(project_name)
 
-    raise GPSProjetNotFound, "project not found \"#{project_name}\"" unless project?(project_name)
+    raise GPSProjectNotFound, "project not found \"#{project_name}\"" unless project?(project_name)
 
     project = environment.project(org, name) do
       environments project_environments
@@ -259,7 +273,7 @@ class GeoEngineer::GPS
         n.create_resources(project) unless n.meta?
       rescue StandardError => e
         # adding context to error
-        raise [n.node_id, e.message].join(": ")
+        raise $ERROR_INFO, [n.node_id, e.message].join(": "), $ERROR_INFO.backtrace
       end
     end
   end

@@ -17,6 +17,7 @@ class GeoEngineer::Environment
   include HasLifecycle
 
   attr_reader :name
+  attr_reader :remote_state_supported
 
   # Validate resources have unique attributes
   validate -> {
@@ -51,12 +52,13 @@ class GeoEngineer::Environment
 
   before :validation, -> { self.region ||= ENV['AWS_REGION'] if ENV['AWS_REGION'] }
 
-  def initialize(name, &block)
+  def initialize(name, remote_state = false, &block)
     @name = name
     @outputs = []
     @providers = []
     @variables = []
     @backends = []
+    @remote_state_supported = remote_state
     self.send("#{name}?=", true) # e.g. staging?
     instance_exec(self, &block) if block_given?
     execute_lifecycle(:after, :initialize)
@@ -87,6 +89,16 @@ class GeoEngineer::Environment
 
   def find_provider(id_alias)
     @providers.find { |p| p.terraform_id == id_alias }
+  end
+
+  def backend(id, &block)
+    backend = GeoEngineer::Backend.new(id, &block)
+    @backends << backend
+    backend
+  end
+
+  def find_backend(id_alias)
+    @backends.find { |p| p.terraform_id == id_alias }
   end
 
   def output(id, value, &block)
@@ -157,6 +169,7 @@ class GeoEngineer::Environment
 
     tf_resources = all_resources.map(&:to_terraform)
     tf_resources += @providers.compact.map(&:to_terraform)
+    tf_resources += @backends.compact.map(&:to_terraform)
     tf_resources += @outputs.compact.map(&:to_terraform)
     tf_resources += @variables.compact.map(&:to_terraform)
     tf_resources += @backends.compact.map(&:to_terraform)
@@ -174,8 +187,11 @@ class GeoEngineer::Environment
     h = { resource: json_resources }
     h[:output] = @outputs.map(&:to_terraform_json) unless @outputs.empty?
     h[:provider] = @providers.map(&:to_terraform_json) unless @providers.empty?
+    unless @backends.empty?
+      h[:terraform] ||= {}
+      h[:terraform][:backend] = @backends.map(&:to_terraform_json)
+    end
     h[:variable] = @variables.map(&:to_terraform_json) unless @variables.empty?
-    h[:terraform] = { backend: @backends.map(&:to_terraform_json) } unless @backends.empty?
     h
   end
 
@@ -223,5 +239,9 @@ class GeoEngineer::Environment
       r._type == type && !local_resources_geo_ids.include?(r._geo_id)
     end
     res.sort_by(&:terraform_name)
+  end
+
+  def remote_state_supported?
+    @remote_state_supported
   end
 end

@@ -56,11 +56,11 @@ class GeoEngineer::GPS::Node
   end
 
   def project_org
-    project.split("/")[0]
+    project.split("/", 2)[0]
   end
 
   def project_name
-    project.split("/")[1]
+    project.split("/", 2)[1]
   end
 
   def set_values(nodes, constants)
@@ -122,6 +122,11 @@ class GeoEngineer::GPS::Node
 
   def node_id
     @node_id ||= [project, environment, configuration, node_type, node_name].compact.join(":")
+  end
+
+  def add_depends_on(new_deps)
+    @depends_on += new_deps
+    @depends_on.uniq!
   end
 
   def load_gps_file
